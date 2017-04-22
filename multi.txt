@@ -1,0 +1,41 @@
+Multithreading
+WHAT is thread
+a thread of execution is the smallest sequence of programmed instructions that can be managed independently by a scheduler, which is typically a part of the operating system
+
+
+What are the two ways of creating a thread?
+             If your class is intended to be executed as a thread then you can achieve this by implementing a Runnable interface.
+            The second way to create a thread is to create a new class that extendsThread class using the following two simple steps. This approach provides more flexibility in handling multiple threads created using available methods in Thread class.
+
+
+What is Deadlock? How to analyze and avoid deadlock situation?
+- When two or more threads are waiting for each other and get blocked forever then this situation is called Deadlock.
+- During deadlock two threads, each thread has acquired a lock on one resource and trying to acquire a lock on resource of other thread.
+- Each thread will wait indefinitely for the other to release the lock, unless one of the user processes is stopped.
+
+
+a way where multiple activities can proceed concurrently in the same program.
+
+
+What do you understand by thread-safety? Why is it required? And finally, how to achieve thread-safety in Java Applications?
+¡°A piece of code is thread-safe if it functions correctly during simultaneous execution by multiple threads.¡±
+it can satisfy the need for multiple threads to access the same shared data
+make sure a shared piece of data to be accessed by only one thread at any given time.¡±
+
+
+What is synchronization?
+The mechanism defined by java for the Resources to be used by only one Thread at a time.
+
+
+14.	What are the benefits of multi-threaded programming?
+The benefits of multithreaded programming can be broken down into four major categories:
+1.	Responsiveness
+Multithreading an interactive application may allow a program to continue running even if part of it is blocked or is performing a lengthy operation, thereby increasing responsiveness to the user.
+For instance, a multithreaded web browser could still allow user interaction in one thread while an image was being loaded in another thread.
+2.	Resource sharing
+By default, threads share the memory and the resources of the process to which they belong. The benefit of sharing code and data is that it allows an application to have several different threads of activity within the same address space.
+3.	Economy
+Allocating memory and resources for process creation is costly. Because threads share resources of the process to which they belong, it is more economical to create and context-switch threads. Empirically gauging the difference in overhead can be difficult, but in general it is much more time consuming to create and manage processes than threads.
+In Solaris, for example, creating a process is about thirty times slower than is creating a thread, and context switching is about five times slower.
+4.	Utilization of multiprocessor architectures
+The benefits of multithreading can be greatly increased in a multiprocessor architecture, where threads may be running in parallel on different processors. A single threaded process can only run on one CPU, no matter how many are available.
