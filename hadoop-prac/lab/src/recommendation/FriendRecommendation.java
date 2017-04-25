@@ -71,6 +71,8 @@ public class FriendRecommendation {
   public static class TopTenReducer
     extends Reducer<Text, Text, Text, Text> {
 
+    private Text list = new Text();
+
     @Override
     public void reduce(Text person, Iterable<Text> info, Context context)
       throws IOException, InterruptedException {
@@ -81,20 +83,23 @@ public class FriendRecommendation {
           long num2 = Long.parseLong(o2.split("\\s+|\\t+")[1]);
           if (num1 == num2)
             return 0;
-          else if (num1 > num2)
+          else if (num1 < num2)
             return 1;
           else
             return -1;
         }
       });
       for (Text t : info) {
-        pq.add(info.toString());
+        pq.add(t.toString());
         if (pq.size() == 11)
           pq.poll();
       }
+      String recom = "";
       while (!pq.isEmpty()) {
-        context.write(person, new Text(pq.poll().split("\\s+")[0]));
+        recom += pq.poll().split("\\s+")[0];
       }
+      list.set(recom);
+      context.write(person, list);
     }
   }
 
