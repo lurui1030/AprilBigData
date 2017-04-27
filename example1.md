@@ -1,4 +1,0 @@
-yuyu 
-shi
-tiao
-dog
