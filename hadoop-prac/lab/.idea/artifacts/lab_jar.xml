@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="lab:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/lab_jar</output-path>
+    <root id="archive" name="lab.jar">
+      <element id="module-output" name="lab" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../hadoop/hadoop-common-2.7.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../hadoop/hadoop-mapreduce-client-core-2.7.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../hadoop/hadoop-mapreduce-client-jobclient-2.7.3.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
