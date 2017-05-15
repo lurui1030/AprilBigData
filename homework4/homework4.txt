@@ -1,0 +1,92 @@
+1. Create encrypted accounts and contacts table in Mysql;
+
+CREATE TABLE encrypted_accounts (
+  id INTEGER NOT NULL,
+  name VARCHAR(50),
+  phone CHAR(12),
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE encrypted_contacts (
+  id INTEGER NOT NULL,
+  account_id INTEGER,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  phone CHAR(12),
+  email VARCHAR(50),
+  PRIMARY KEY (id),
+  CONSTRAINT fk_encrypted_account FOREIGN KEY (account_id)
+  REFERENCES encrypted_accounts(id)
+);
+
+GRANT ALL PRIVILEGES ON HOMEWORK4.* to ''@'localhost';
+
+2. Create accounts and contacts table in Hive:
+
+CREATE DATABASE HOMEWORK4;
+
+USE HOMEWORK4;
+
+CREATE TABLE accounts (
+  id BIGINT,
+  name VARCHAR(50),
+  phone CHAR(12)
+);
+
+CREATE TABLE contacts (
+  id BIGINT,
+  account_id INTEGER,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  phone CHAR(12),
+  email VARCHAR(50)
+);
+
+3. Load data from Mysql database to Hive.
+
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table accounts --hive-import --hive-table homework4.accounts -m 1
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table contacts --hive-import --hive-table homework4.contacts -m 1
+
+4. Create UDF to encrypt the information in accounts and contacts table.
+
+UDF for encrypt phone number:
+
+import org.apache.hadoop.hive.ql.exec.UDF;
+import org.apache.hadoop.io.Text;
+
+public class EmailEncrypted extends UDF{
+	public Text evaluate(Text column){
+		String s = column.toString();
+		String cleaned_column = "XXX" + s.substring(s.indexOf("@"));
+		return new Text(cleaned_column);
+	}
+}
+
+UDF for encrypt email:
+
+import org.apache.hadoop.hive.ql.exec.UDF;
+import org.apache.hadoop.io.Text;
+
+public class PhoneNumberEncrypted extends UDF{
+	public Text evaluate(Text column){
+		String cleaned_column = column.toString().substring(0, 7).replaceAll("[0-9]", "X") + column.toString().substring(7);
+		return new Text(cleaned_column);
+	}
+}
+
+5. Create UDF in Hive.
+
+Add jar UDF.jar;
+CREATE TEMPORARY function PhoneNumberEncrypted as 'com.marlabs.bigdata.udf.PhoneNumberEncrypted';
+CREATE TEMPORARY function EmailEncrypted as 'com.marlabs.bigdata.udf.EmailEncrypted';
+
+6. Overwrite the data in Hive.
+
+INSERT OVERWRITE TABLE ACCOUNTS SELECT ID, NAME, PhoneNumberEncrypted(PHONE) FROM ACCOUNTS;
+INSERT OVERWRITE TABLE CONTACTS SELECT ID, ACCOUNT_ID, FIRST_NAME, LAST_NAME, PhoneNumberEncrypted(PHONE), EmailEncrypted(EMAIL) FROM CONTACTS;
+
+7. Export data from Hive to Mysql.
+
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_accounts --export-dir /apps/hive/warehouse/homework4.db/accounts --input-fields-terminated-by '\0001' -m 1
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_contacts --export-dir /apps/hive/warehouse/homework4.db/contacts --input-fields-terminated-by '\0001' -m 1
+
