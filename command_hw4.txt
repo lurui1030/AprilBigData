@@ -1,0 +1,92 @@
+//1.log in
+mysql -u root -p
+hadoop
+
+//2.load source
+source hw4.sql;
+
+//3.tell mysql the data is utf8 format
+SET NAMES utf8;
+SET CHARACTER SET utf8;
+
+//4.grant all permission to homework4 database
+GRANT ALL PRIVILEGES ON homework4.* TO ''@'localhost';
+exit;
+
+//5.create new database homework4
+hive
+CREATE DATABASE homework4;
+exit;
+
+//6.sqoop import to specified table in hive
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table accounts --hive-import --hive-table homework4.accounts -m 1
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table contacts --hive-import --hive-table homework4.contacts -m 1
+
+//7.create new java project for UDF function
+<Encrypted.jar>:
+
+<EncryptPhoneNum.java>:
+import org.apache.hadoop.hive.ql.exec.UDF;
+import org.apache.hadoop.io.Text;
+
+public class EncryptPhoneNum extends UDF{
+	public Text evaluate(Text str){
+		String[] nums = str.toString().split("-");
+		String res = "XXX-XXX-" + nums[2];
+		return new Text(res);
+	}
+}
+
+<EncryptEmail.java>:
+import org.apache.hadoop.hive.ql.exec.UDF;
+import org.apache.hadoop.io.Text;
+
+public class EncryptEmail extends UDF{
+	public Text evaluate(Text str){
+		String[] nums = str.toString().split("@");
+		String res = "XXX@" + nums[1];
+		return new Text(res);
+	}
+}
+
+//8.add jar file to hive, and claim UDF
+hive
+ADD JAR Encrypted.jar;
+CREATE TEMPORARY function ENCRYPTPHONENUM as 'EncryptPhoneNum';
+CREATE TEMPORARY function ENCRYPTEMAIL as 'EncryptEmail';
+
+//9.overwrite the rows in these two tables
+INSERT OVERWRITE TABLE accounts SELECT id, name, ENCRYPTPHONENUM(phone) FROM accounts;
+INSERT OVERWRITE TABLE contacts SELECT id, account_id, first_name, last_name, ENCRYPTPHONENUM(phone), ENCRYPTEMAIL(email) FROM contacts;
+exit;
+
+//10.log in mysql and create tables ready for exporting
+mysql -u root -p
+hadoop
+USE homework4;
+
+DROP TABLE IF EXISTS encrypted_accounts;
+CREATE TABLE encrypted_accounts (
+  id INTEGER NOT NULL,
+  name VARCHAR(50),
+  phone CHAR(12),
+  PRIMARY KEY (id)
+);
+
+DROP TABLE IF EXISTS encrypted_contacts;
+CREATE TABLE encrypted_contacts (
+  id INTEGER NOT NULL,
+  account_id INTEGER,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  phone CHAR(12),
+  email VARCHAR(50),
+  PRIMARY KEY (id),
+  CONSTRAINT fk_encrypted_account FOREIGN KEY (account_id)
+  REFERENCES encrypted_accounts(id)
+);
+
+
+//11.export data to mysql
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_accounts --export-dir /apps/hive/warehouse/homework4.db/accounts --input-fields-terminated-by '\0001' -m 1
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_contacts --export-dir /apps/hive/warehouse/homework4.db/contacts --input-fields-terminated-by '\0001' -m 1
