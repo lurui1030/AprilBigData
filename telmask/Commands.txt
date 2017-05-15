@@ -1,0 +1,24 @@
+
+//hive
+Create dataase telmask;
+create table accounts(id bigint, name varchar(50), phone varchar(50));
+
+ create table contacts(id bigint, account_int bigint, first_name varchar(50),last_name varchar(50), phone varchar(50), email varchar(50));
+
+sqoop import --connect jdbc:mysql://localhost/telmask --driver com.mysql.jdbc.Driver --table contacts --hive-import --hive-table telmask.contacts -m 1
+
+sqoop import --connect jdbc:mysql://localhost/telmask --driver com.mysql.jdbc.Driver --table contacts --hive-import --hive-table telmask.contacts -m 1
+
+//hive
+Add jar TelMaskUDF.jar;
+ create temporary function telmaskudf as 'telmask.TelMaskUDF';
+ create temporary function emailmaskued as 'telmask.EmailMaskUDF';
+
+
+
+insert overwrite table accounts select id, name, telmaskudf(phone) from accounts;
+insert overwrite table contacts select id, account_int, first_name, last_name, telmaskudf(phone), emailmaskudf(email) from contacts;
+
+sqoop export --connect jdbc:mysql://localhost/telmask/ --driver com.mysql.jdbc.Driver --table accounts --direct --update-key id --update-mode updateonly --export-dir /apps/hive/warehouse/telmask.db/accounts/  --input-fields-terminated-by '\0001' -m 1
+
+sqoop export --connect jdbc:mysql://localhost/telmask --table encrypted_contacts --export-dir /apps/hive/warehouse/telmask.db/contacts/ --input-fields-terminated-by '\0001' -m 1
