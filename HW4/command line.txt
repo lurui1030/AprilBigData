@@ -1,0 +1,11 @@
+sqoop import --connect jdbc:mysql://ip-172-31-13-154:3306/sqoopex --username sqoopuser --password NHkkP876rp --driver com.mysql.jdbc.Driver --table accounts --hive-import --hive-table lab_demo.sqoop_accounts -m 1
+
+sqoop import --connect jdbc:mysql://ip-172-31-13-154:3306/sqoopex --username sqoopuser --password NHkkP876rp --driver com.mysql.jdbc.Driver --table contacts --hive-import --hive-table lab_demo.sqoop_contacts -m 1	
+
+hadoop fs -copyFromLocal mask.jar
+
+hadoop fs -copyFromLocal mask2.jar
+
+sqoop export --connect jdbc:mysql://ip-172-31-13-154:3306/sqoopex --username sqoopuser --password NHkkP876rp --driver com.mysql.jdbc.Driver --table encrypted_accounts --export-dir /apps/hive/warehouse/lab_demo/encrypted_accounts --input-fields-terminated-by '\0001' -m 1
+
+ sqoop export --connect jdbc:mysql://ip-172-31-13-154:3306/sqoopex --username sqoopuser --password NHkkP876rp --driver com.mysql.jdbc.Driver --table encrypted_contacts --export-dir /apps/hive/warehouse/lab_demo/encrypted_contacts --input-fields-terminated-by '\0001' -m 1

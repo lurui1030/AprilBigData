@@ -1,0 +1,13 @@
+mysql -h ip-172-31-13-154 -u sqoopuser -p
+
+use sqoopex;
+
+set names utf8;
+
+set character set utf8;
+
+source hw4.sql;
+
+select * from encrypted_accounts;
+
+select * from encrypted_contacts;

@@ -1,0 +1,39 @@
+hive
+
+use lab_demo;
+
+ create table encrypted_accounts(
+               > id bigint,
+               > name varchar(50),
+               > phone char(12)
+               > );
+
+ create table encrypted_contacts(
+               >id bigint,
+               > account_id bigint,
+               > first_name varchar(50),
+               > last_name varchar(50),
+               > phone char(12),
+               > email varchar(50)
+               > );
+
+
+add jar mask.jar;
+
+add jar mask2.jar;
+
+create temporary function mask as 'mask.mask';
+
+create temporary function mask2 as 'mask2.mask2';
+
+insert into encrypted_accounts select id, name, mask(phone) fro
+m sqoop_accounts;
+
+insert into encrypted_contacts select id, account_id, first_nam
+e, last_name, mask(phone), mask2(email) from sqoop_contacts;
+
+select * from encrypted_accounts;
+
+select * from encrypted_contacts;
+
+
