@@ -45,8 +45,20 @@ step 3: write udf code:  EncryptPhone.java
     	    > from contacts;
 
 step 4: create mysql tables encrypt_account, encrypt_contacts
-     	$ sqoop export --connect jdbc:mysql://0.0.0.0:3306/homework4 --username root --password cloudera --table encrypt_accounts --export-dir /user/hive/warehouse/hw4.db/accounts --input-fields-terminated-by '\0001' -m 1
-	$ sqoop export --connect jdbc:mysql://0.0.0.0:3306/homework4 --username root --password cloudera --table encrypt_contacts --export-dir /user/hive/warehouse/hw4.db/contacts --input-fields-terminated-by '\0001' -m 1
+     	$ sqoop export --connect jdbc:mysql://0.0.0.0:3306/homework4 \
+	  --username root \
+	  --password cloudera \
+	  --table encrypt_accounts \
+	  --export-dir /user/hive/warehouse/hw4.db/accounts \
+	  --input-fields-terminated-by '\0001' \
+	  -m 1
+	$ sqoop export --connect jdbc:mysql://0.0.0.0:3306/homework4 \
+	  --username root \
+	  --password cloudera \
+	  --table encrypt_contacts \
+	  --export-dir /user/hive/warehouse/hw4.db/contacts \
+	  --input-fields-terminated-by '\0001' \
+	  -m 1
 	
 
 result:
