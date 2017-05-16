@@ -1,0 +1,77 @@
+HomeWork 4 -->
+
+**** SQOOP COMMANDS ****
+
+-->Importing from RDBMS to Hive
+
+  -Accounts table.
+   sqoop import --connect jdbc:mysql://localhost/homework4 --driver
+   com.mysql.jdbc.Driver --table accounts --hive-import --hive-table 
+   homework4.accounts -m 1;
+
+  -Contacts Table.
+   sqoop import --connect jdbc:mysql://localhost/homework4 --driver
+   com.mysql.jdbc.Driver --table contacts --hive-import --hive-table 
+   homework4.contacts -m 1;
+
+-->Exporting From Hive to RDBMS
+  
+  -Accounts Table.
+   sqoop export --connect jdbc:mysql://localhost/homework4 --driver   
+   com.mysql.jdbc.Driver --table accounts_export --export-dir /apps/hive/
+   warehouse/homework4.db/accounts --input-fields-terminated-by '\0001' -m 1;
+
+  -Contacts Table;
+   sqoop export --connect jdbc:mysql://localhost/homework4 --driver   
+   com.mysql.jdbc.Driver --table contacts_export --export-dir /apps/hive/
+   warehouse/homework4.db/contacts --input-fields-terminated-by '\0001' -m 1;
+
+**** HIVE UDF ****
+
+-->UDF for Masking Phone:
+
+   package com.homework4.udf;
+
+   import org.apache.hadoop.hive.ql.exec.UDF;
+   import org.apache.hadoop.io.Text;
+   import org.apache.parquet.bytes.ConcatenatingByteArrayCollector;
+
+   public class MaskPhone extends UDF{
+	 public Text evaluate(String value){
+		String[] str=value.split("-");
+		return new Text("xxx-xxx-".concat(str[2]));
+	}
+   }
+
+-->UDF for Masking Email:
+
+   package com.homework4.udf;
+
+   import org.apache.hadoop.hive.ql.exec.UDF;
+   import org.apache.hadoop.io.Text;
+
+   public class MaskEmail extends UDF{
+	public Text evaluate(String value){
+		String [] str=value.split("@");
+		return new Text("xxx@".concat(str[1]));
+	}
+   }
+
+
+**** HIVE COMMANDS ****
+
+-hive>create database homework4;
+-hive>use homework4;
+
+--> Creating Temporary Functions:
+-hive>add jar homewrok4.jar;
+-hive>create temporary function mask_phone as 'homework4.MaskPhone';
+-hive>create temporary functions mask_email as 'homework4.MaskEmail';
+
+-->Overwriting the tables;
+
+-hive>insert overwrite table accounts select id, name, mask_phone(phone) from accounts;
+-hive>insert overwrite table contacts select id, account_id, first_name, last_name,
+ mask_phone(phone), mask_email(email) from contacts;
+
+
