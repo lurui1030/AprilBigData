@@ -1,0 +1,86 @@
+1.Connect to the mysql database
+
+mysql -u root -p
+
+2.Create database sqoop_example;
+
+use sqoop_example;
+
+3.Tell mysql the data is in utf8 format:
+
+SET NAMES utf8;
+SET CHARACTER SET utf8;
+
+4.upload hw4.sql to sandbox
+
+scp -P 2222 hw4.sql maria_dev@127.0.0.1:/home/maria_dev
+
+5.Uplpad hw4.sql to mysql
+
+mysql> source hw4.sql;
+
+6.Set the appropriate permission for tables in mysql, so that sqoop can get access and talk to it
+
+GRANT ALL PRIVILEGES ON homework4.* to ''@'localhost';
+
+7.Create a database named homework4 on hive
+
+CREATE DATABASE homework4;
+
+8.Import data to hive by sqoop
+
+sqoop import-all-tables --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --hive-import --hive-database homework4 -m 1
+
+9 Create two masked tables on hive
+
+CREATE TABLE masked_accounts LIKE accounts;
+CREATE TABLE masked_contacts LIKE contacts;
+
+10.add UDF Jar file in Hive
+
+ADD JAR MaskingUDF.jar;
+
+11.Create a temporary function using this JAR
+
+CREATE TEMPORARY function MaskingUDF as 'com.marlabs.bigdata.MaskingUDF';
+
+12.Insert Overwrite into two masked tables using the Hive UDF function
+
+INSERT OVERWRITE TABLE masked_accounts 
+SELECT id, name, MaskingUDF(phone)
+FROM accounts;
+
+INSERT OVERWRITE TABLE masked_contacts
+SELECT id, account_id, first_name, last_name, MaskingUDF(phone), MaskingUDF(email)
+FROM contacts;
+
+13.Create two masked table in mysql
+
+CREATE TABLE masked_accounts (
+id INTEGER,
+name VARCHAR(50),
+phone VARCHAR(12));
+
+CREATE TABLE masked_contacts (
+id INTEGER,
+account_id INTEGER,
+first_name VARCHAR(50),
+last_name varchar(50),
+phone CHAR(12),
+email VARCHAR(50));
+
+14.Export two masked tables into mySQL from Hive
+
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table masked_accounts --export-dir /apps/hive/warehouse/homework4.db/masked_accounts --input-fields-terminated-by ‘\0001’ -m 1
+
+sqoop export --connect jdbc:mysql://localhost/sqoop_example --driver com.mysql.jdbc.Driver --table exported_movies --export-dir /apps/hive/warehouse/homework4.db --input-fields-terminated-by ‘\0001’ -m 1
+
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table masked_contacts --export-dir /apps/hive/warehouse/homework4.db/masked_contacts --input-fields-terminated-by ‘\0001’ -m 1
+
+
+
+
+
+
+
+
