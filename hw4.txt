@@ -1,0 +1,83 @@
+step 1: mysql -u root -p
+     	set names utf8
+	set character set utf8
+     	source hw4.sql
+
+step 2: log in hive
+	create hive table
+     	hive> create hw4;
+	hive> exit;
+
+	import from mysql to hive
+	$ sqoop import --connect jdbc:mysql://0.0.0.0:3306/homework4 \
+	  --username root \
+	  --password cloudera \
+	  --table accounts \
+	  --hive-import \
+	  --hive-table hw4.accounts \
+	  -m 1
+
+	$ sqoop import --connect jdbc:mysql://0.0.0.0:3306/homework4 \
+	  --username root \
+	  --password cloudera \
+	  --table contacts \
+	  --hive-import \
+	  --hive-table hw4.contacts \
+	  -m 1
+
+step 3: write udf code:  EncryptPhone.java
+     	hadoop-prac/lab/src/hiveudf/EncryptEmail.java
+     	hadoop-prac/lab/src/hiveudf/EncryptPhone.java	
+     	package:
+	$ javac -classpath /usr/lib/hadoop/hadoop-common.jar:/usr/lib/hive/lib/hive-exec.jar EncryptPhone.java EncryptEmail.java
+	$ jar -cf encrypt-phone.jar EncryptPhone.class
+	$ jar -cf encrypt-email.jar EncryptEmail.class
+	login hive
+	hive> add jar encrypt-email.jar;
+	hive> add jar encrypt-phone.jar;
+	hive> create temporary function ENCRYPTEMAIL as 'EncryptEmail';
+	hive> create temporary function ENCRYPTPHONE as 'EncryptPhone';
+	hive> insert overwrite table accounts
+    	    > select id, name, ENCRYPTPHONE(phone)
+    	    > from accounts;
+	hive> insert overwrite table contacts
+    	    > select id, account_id, first_name, last_name, ENCRYPTPHONE(phone), ENCRYPTEMAIL(email)
+    	    > from contacts;
+
+step 4: create mysql tables encrypt_account, encrypt_contacts
+     	$ sqoop export --connect jdbc:mysql://0.0.0.0:3306/homework4 --username root --password cloudera --table encrypt_accounts --export-dir /user/hive/warehouse/hw4.db/accounts --input-fields-terminated-by '\0001' -m 1
+	$ sqoop export --connect jdbc:mysql://0.0.0.0:3306/homework4 --username root --password cloudera --table encrypt_contacts --export-dir /user/hive/warehouse/hw4.db/contacts --input-fields-terminated-by '\0001' -m 1
+	
+
+result:
+mysql> show tables;
++---------------------+
+| Tables_in_homework4 |
++---------------------+
+| accounts            |
+| contacts            |
+| encrypt_accounts    |
+| encrypt_contacts    |
++---------------------+
+
+mysql> select * from encrypt_accounts;
++----+------------------------+--------------+
+| id | name                   | phone        |
++----+------------------------+--------------+
+|  1 | Small Company LLC      | XXX-XXX-2222 |
+|  2 | Medium Company LLC     | XXX-XXX-2222 |
+|  3 | Large Company LLC      | XXX-XXX-2222 |
+|  4 | Very Large Company LLC | XXX-XXX-2222 |
++----+------------------------+--------------+
+
+mysql> select * from encrypt_contacts;
++----+------------+------------+-----------+--------------+---------------+
+| id | account_id | first_name | last_name | phone        | email         |
++----+------------+------------+-----------+--------------+---------------+
+| 11 |          1 | John       | Smith     | XXX-XXX-2222 | XXX@gmail.com |
+| 12 |          2 | Bob        | Smith     | XXX-XXX-3334 | XXX@gmail.com |
+| 13 |          3 | Mark       | Taylor    | XXX-XXX-3335 | XXX@gmail.com |
+| 14 |          4 | Pat        | Taylor    | XXX-XXX-3336 | XXX@gmail.com |
++----+------------+------------+-----------+--------------+---------------+
+
+
