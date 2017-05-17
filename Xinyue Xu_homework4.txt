@@ -1,0 +1,62 @@
+>mysql
+SET NAMES utf8;
+SET CHARACTER SET utf8;
+
+>sandbox //connect to mysql
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table accounts -m 1
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table contacts -m 1
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_accounts -m 1
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_contacts -m 1
+
+>mysql
+GRANT ALL PRIVILEGES ON homework4.* to ''@'localhost';
+
+
+>sandbox //import to hive
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table accounts --target-dir '/user/maria_dev/homework4/accounts' --fields-terminated-by '\t' --hive-import --create-hive-table --hive-table homework4.accounts
+
+sqoop import --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table contacts --target-dir '/user/maria_dev/homework4/contacts' --fields-terminated-by '\t' --hive-import --create-hive-table --hive-table homework4.contacts
+
+
+>hive
+CREATE TABLE encrypted_accounts (
+  id BIGINT,
+  name VARCHAR(50),
+  phone CHAR(12)
+);
+
+CREATE TABLE encrypted_contacts (
+  id BIGINT,
+  encrypted_account_id BIGINT,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  phone CHAR(12),
+  email VARCHAR(50)
+);
+
+>hive
+use homework4;
+
+INSERT INTO table encrypted_accounts SELECT id, name, CONCAT('XXX-XXX', CUTPHONE) as encypt_phone FROM( SELECT id, name, SUBSTR(phone, 8) AS CUTPHONE FROM homework4.accounts) temp;
+
+INSERT INTO table encrypted_contacts SELECT id, account_id, first_name, last_name, CONCAT('XXX-XXX', CUTPHONE) as encrypt_phone, CONCAT('XXX', CUTEMAIL) as encrypt_email FROM( SELECT id, account_id, first_name, last_name, SUBSTR(phone, 8) AS CUTPHONE, SUBSTR(email, locate('@', email)) as CUTEMAIL FROM homework4.contacts) temp1;
+
+>mysql
+CREATE TABLE encrypted_accounts (
+  id INTEGER,
+  name VARCHAR(50),
+  phone CHAR(12)
+);
+
+CREATE TABLE encrypted_contacts (
+  id INTEGER,
+  encrypted_account_id INTEGER,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  phone CHAR(12),
+  email VARCHAR(50)
+);
+
+>sandbox
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_accounts --export-dir /apps/hive/warehouse/homework4.db/encrypted_accounts --input-fields-terminated-by ‘\0001’ -m 1
+sqoop export --connect jdbc:mysql://localhost/homework4 --driver com.mysql.jdbc.Driver --table encrypted_contacts --export-dir /apps/hive/warehouse/homework4.db/encrypted_contacts --input-fields-terminated-by ‘\0001’ -m 1
