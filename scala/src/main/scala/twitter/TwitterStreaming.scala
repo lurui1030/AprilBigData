@@ -49,7 +49,7 @@ object TwitterStreaming {
     hashtags.transform(x => {
       val list = x.first()
       x.filter(_ == list)
-    })
+    }).print()
 
     ssc.start()
     ssc.awaitTermination()
