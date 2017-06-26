@@ -1,0 +1,5 @@
+package pagerank
+
+object PageRank {
+
+}

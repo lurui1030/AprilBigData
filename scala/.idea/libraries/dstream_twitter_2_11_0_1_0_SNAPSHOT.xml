@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="dstream-twitter_2.11-0.1.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../spark/streaming/twitter/dstream-twitter_2.11-0.1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../spark/streaming/twitter/twitter4j-core-4.0.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../spark/streaming/twitter/twitter4j-stream-4.0.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
